@@ -1,5 +1,5 @@
 import json as jsonlib
-from typing import Union, Tuple
+from typing import Union, Tuple, Callable
 
 from . import exceptions
 
@@ -10,18 +10,26 @@ ValueType = Union[str, int, float, bool, list, None]
 DATA_LENGTH_LIMIT = 64  # taken from https://core.telegram.org/bots/api#inlinekeyboardbutton
 
 
-def make_data(filter_: FilterType, value: ValueType = None) -> str:
+def make_data(filter_: FilterType, value: ValueType = None, *,
+              json_serializer: Callable = jsonlib.dumps) -> str:
     """
     Make a string for callback_data field in InlineKeyboardButton.
 
     :param filter_: value to filter the callback.
     :param value: value for inline button.
+    :param json_serializer: function for JSON serialization.
     :raises CallbackDataIsTooLargeError: if the data has exceeded the allowed size limit.
     :return: callback_data string.
     """
 
     data = [filter_, value] if value is not None else filter_
-    data = jsonlib.dumps(data, separators=(",", ":"))
+    try:
+        data = json_serializer(data, separators=(",", ":"))
+    except TypeError as exception:  # if there is no separators kwarg in the serializer
+        if exception.args[0] == "'separators' is an invalid keyword argument for this function":
+            data = json_serializer(data)
+        else:
+            raise
 
     data_length = len(data.encode())
     if data_length > DATA_LENGTH_LIMIT:
@@ -30,15 +38,16 @@ def make_data(filter_: FilterType, value: ValueType = None) -> str:
     return data
 
 
-def parse_data(data: str) -> Tuple[FilterType, ValueType]:
+def parse_data(data: str, *, json_deserializer: Callable = jsonlib.loads) -> Tuple[FilterType, ValueType]:
     """
     Parse data to get filter value and button value.
 
     :param data: callback_data string.
+    :param json_deserializer: function for JSON deserialization.
     :return: value to filter the callback and inline button value.
     """
 
-    data = jsonlib.loads(data)
+    data = json_deserializer(data)
 
     if isinstance(data, list):
         filter_, value = data
