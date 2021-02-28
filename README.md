@@ -44,3 +44,5 @@ This solution is unreliable because if a separator-character is encountered in a
   Value part of the button can be used to store any information that is associated with the button.
 - You can use strings or integers as a filter.
   As the value of the button, you can use strings, integers, float numbers, bools, as well as lists with all of the above.
+- You can use your own JSON serialization/deserialization functions by passing the appropriate keyword arguments `json_serializer` and `json_deserializer`.
+  Be sure to make sure that the serialization function excludes spaces.
