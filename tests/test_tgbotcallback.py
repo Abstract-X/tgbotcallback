@@ -38,14 +38,9 @@ class TestMakeData:
 
         assert tgbotcallback.make_data(filter_, value) == expected_result
 
-    @pytest.mark.parametrize(
-        ("filter_",),
-        (
-            ("a" * (DATA_LENGTH_LIMIT + 1),),
-        )
-    )
-    def test_when_resulted_callback_data_is_too_large(self, filter_):
+    def test_when_resulted_callback_data_is_too_large(self):
 
+        filter_ = "a" * (DATA_LENGTH_LIMIT + 1)
         with pytest.raises(tgbotcallback.exceptions.CallbackDataIsTooLargeError):
             tgbotcallback.make_data(filter_)
 
