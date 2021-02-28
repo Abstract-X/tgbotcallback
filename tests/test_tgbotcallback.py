@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock as Mock
+
 import pytest
 
 import tgbotcallback
@@ -47,6 +49,20 @@ class TestMakeData:
         with pytest.raises(tgbotcallback.exceptions.CallbackDataIsTooLargeError):
             tgbotcallback.make_data(filter_)
 
+    @pytest.mark.parametrize(
+        ("parts_args", "expected_args"),
+        (
+            (("filter",), ("filter",)),
+            (("filter", "value"), (["filter", "value"],))
+        )
+    )
+    def test_when_a_third_party_json_serializer_is_used(self, parts_args, expected_args):
+
+        json_serializer_mock = Mock()
+        tgbotcallback.make_data(*parts_args, json_serializer=json_serializer_mock)  # noqa
+
+        json_serializer_mock.assert_called_once_with(*expected_args)
+
 
 class TestParseData:
 
@@ -70,3 +86,11 @@ class TestParseData:
     def test(self, data, expected_result):
 
         assert tgbotcallback.parse_data(data) == expected_result
+
+    def test_when_a_third_party_json_deserializer_is_used(self):
+
+        data = "12345"
+        json_deserializer_mock = Mock()
+        tgbotcallback.parse_data(data, json_deserializer=json_deserializer_mock)  # noqa
+
+        json_deserializer_mock.assert_called_once_with(data)
